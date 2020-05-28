@@ -28,7 +28,7 @@ func New(addr string) *Lock {
 // returns error if failed.
 func (l *Lock) Lock(key string, timeout time.Duration) (string, error) {
 	id := randStr(10)
-	res, err := lockScript.Run(context.Background(), l.c, []string{key}, id, timeout.Milliseconds()).Text()
+	res, err := lockScript.Run(context.Background(), l.c, []string{"dlock:" + key}, id, timeout.Milliseconds()).Text()
 	if err != nil && err != redis.Nil {
 		return "", err
 	}
@@ -40,10 +40,10 @@ func (l *Lock) Lock(key string, timeout time.Duration) (string, error) {
 	return id, nil
 }
 
-// Unlock attempts to remove the lock on a key so long as the value matches.
+// Unlock attempts to remove the lock on a key if the id matches.
 // returns error if failed.
 func (l *Lock) Unlock(key, id string) error {
-	res, err := unlockScript.Run(context.Background(), l.c, []string{key}, id).Int()
+	res, err := unlockScript.Run(context.Background(), l.c, []string{"dlock:" + key}, id).Int()
 	if err != redis.Nil && err != nil {
 		return err
 	}
